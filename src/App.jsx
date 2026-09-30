@@ -107,27 +107,27 @@ const driveVideo = (id) => `https://drive.google.com/file/d/${id}/preview`;
 const lessonsByRole = {
   customer_service: [
     {
-      title: "Understanding the Patient Journey",
+      title: "Welcome to Dharma",
+      description:
+        "Get introduced to Dharma Nutrition, the team, and the training journey.",
+      video: driveVideo("1QA00k44gZNeGzOpVqXHJF168vjBvrBSv"),
+    },
+    {
+      title: "Patient Journey",
       description:
         "Follow the patient experience through every important stage of care.",
-      video: driveVideo("1QA00k44gZNeGzOpVqXHJF168vjBvrBSv"),
+      video: driveVideo("1O7QyuXGynZ5KWXZC0H0_JrZ9_GPDs3Yt"),
     },
     {
       title: "Teams and Responsibilities",
       description:
         "Learn how each team contributes and who owns each part of the patient experience.",
-      video: driveVideo("1O7QyuXGynZ5KWXZC0H0_JrZ9_GPDs3Yt"),
-    },
-    {
-      title: "Customer Care and Lead Roles",
-      description:
-        "Understand why customer care and lead-management responsibilities matter.",
       video: driveVideo("1-OLqOM9c4Yl2bqrzkWB1eDGXvMuKsvv_"),
     },
     {
-      title: "Services Overview and Escalation",
+      title: "Products and Services",
       description:
-        "Review Dharma Nutrition services and when an issue should be escalated.",
+        "Review the products and services offered by Dharma Nutrition.",
       video: driveVideo("1G-xhzuO7uKDts3IdfEUoaSJ5VqfBycjM"),
     },
     {
@@ -137,20 +137,21 @@ const lessonsByRole = {
       video: driveVideo("1nivSMhKlIhYnOMtPds6kLZb3Qh0aZz0b"),
     },
     {
-      title: "Respond.io Inbox",
+      title: "Dharma Tools",
       description:
-        "Learn how to respond to conversations in the Respond.io inbox.",
+        "Get introduced to HubSpot, Aircall, Hubstaff, Respond.io, and the tools used in daily work.",
       video: driveVideo("1SVvJ8T9mIY0g4aL9tEwUpAfIiCbQyg0U"),
     },
     {
-      title: "Dharma Tools",
+      title: "CRM",
       description:
-        "Get introduced to Aircall, Hubstaff, and the tools used in daily work.",
+        "Learn the core CRM and HubSpot workflow used by the team.",
       video: driveVideo("1WzLBvZng0WnU7Om3ukzGrIqhumauIAyX"),
     },
     {
-      title: "CRM and HubSpot",
-      description: "Learn the core CRM and HubSpot workflow used by the team.",
+      title: "How to Respond",
+      description:
+        "Learn how to respond to customer conversations clearly and professionally.",
       video: driveVideo("1l-6vxz0-4ey7srn8Ndkqu3MUE_6875uM"),
     },
   ],
@@ -270,7 +271,13 @@ const courseModulesFor = (role) =>
           id: "module-1",
           category: "Dharma Foundations",
           title: "Module 1",
-          lessons: lessonsByRole.customer_service,
+          lessons: lessonsByRole.customer_service.slice(0, 6),
+        },
+        {
+          id: "module-2",
+          category: "Customer Service Tools",
+          title: "Module 2",
+          lessons: lessonsByRole.customer_service.slice(6, 8),
         },
       ];
 
