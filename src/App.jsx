@@ -1016,7 +1016,11 @@ function SalesLearning({ learner, path, onContinue }) {
 }
 
 function SalesModules({ learner }) {
-  const courseModules = courseModulesFor(learner.role);
+  const courseModules = useMemo(
+    () => courseModulesFor(learner.role),
+    [learner.role],
+  );
+  const [syncError, setSyncError] = useState("");
   const [completed, setCompleted] = useState(() =>
     Object.fromEntries(
       courseModules.map((module) => [
@@ -1053,15 +1057,61 @@ function SalesModules({ learner }) {
     (module) => completed[module.id] === module.lessons.length,
   );
 
+  useEffect(() => {
+    async function backfillLocalProgress() {
+      for (const module of courseModules) {
+        const finished = Math.min(
+          Number(
+            localStorage.getItem(moduleStorageKey(learner.id, module.id)) || 0,
+          ),
+          module.lessons.length,
+        );
+        if (!finished) continue;
+        const nextIndex = Math.min(finished, module.lessons.length - 1);
+        const { error } = await supabase.rpc("save_learner_progress", {
+          p_learner_id: learner.id,
+          p_module_key: module.id,
+          p_module_title: module.title,
+          p_lesson_title:
+            finished === module.lessons.length
+              ? "Module complete"
+              : module.lessons[nextIndex].title,
+          p_progress: Math.round((finished / module.lessons.length) * 100),
+        });
+        if (error) {
+          setSyncError(
+            "Progress is saved on this device but could not sync to the admin portal. Please contact an administrator.",
+          );
+          return;
+        }
+      }
+      if (localStorage.getItem(sopStorageKey) === "complete") {
+        const { error } = await supabase.rpc("save_learner_progress", {
+          p_learner_id: learner.id,
+          p_module_key: "sop",
+          p_module_title:
+            learner.role === "sales"
+              ? "Sales Team SOP"
+              : "Customer Service SOP",
+          p_lesson_title: "SOP reviewed",
+          p_progress: 100,
+        });
+        if (error) {
+          setSyncError(
+            "Progress is saved on this device but could not sync to the admin portal. Please contact an administrator.",
+          );
+          return;
+        }
+      }
+      setSyncError("");
+    }
+    backfillLocalProgress();
+  }, [courseModules, learner.id, learner.role, sopStorageKey]);
+
   async function finishLesson(module, index) {
     const finished = Math.max(completed[module.id], index + 1);
-    setCompleted((current) => ({ ...current, [module.id]: finished }));
-    localStorage.setItem(
-      moduleStorageKey(learner.id, module.id),
-      String(finished),
-    );
     const nextIndex = Math.min(finished, module.lessons.length - 1);
-    await supabase.rpc("save_learner_progress", {
+    const { error } = await supabase.rpc("save_learner_progress", {
       p_learner_id: learner.id,
       p_module_key: module.id,
       p_module_title: module.title,
@@ -1071,6 +1121,18 @@ function SalesModules({ learner }) {
           : module.lessons[nextIndex].title,
       p_progress: Math.round((finished / module.lessons.length) * 100),
     });
+    if (error) {
+      setSyncError(
+        "We could not sync this lesson. Your previous progress is still saved on this device.",
+      );
+      return;
+    }
+    setSyncError("");
+    setCompleted((current) => ({ ...current, [module.id]: finished }));
+    localStorage.setItem(
+      moduleStorageKey(learner.id, module.id),
+      String(finished),
+    );
     if (finished < module.lessons.length) {
       setSelected((current) => ({ ...current, [module.id]: nextIndex }));
     } else {
@@ -1094,6 +1156,9 @@ function SalesModules({ learner }) {
     if (!error) {
       localStorage.setItem(sopStorageKey, "complete");
       setSopCompleted(true);
+      setSyncError("");
+    } else {
+      setSyncError("We could not sync the SOP completion. Please try again.");
     }
   }
 
@@ -1105,6 +1170,11 @@ function SalesModules({ learner }) {
           <h2>Course modules</h2>
         </div>
       </div>
+      {syncError && (
+        <p className="signin-error" role="alert">
+          {syncError}
+        </p>
+      )}
       {courseModules.map((module, moduleIndex) => {
         const previous = courseModules[moduleIndex - 1];
         const moduleLocked =
