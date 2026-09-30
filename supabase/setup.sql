@@ -1,6 +1,7 @@
 -- Run this entire file once in the Supabase SQL Editor.
 -- WARNING: the DROP statements permanently remove the current learner records.
 
+drop table if exists public.certificates cascade;
 drop table if exists public.learner_progress cascade;
 drop table if exists public.portal_sessions cascade;
 drop table if exists public.portal_users cascade;
@@ -10,6 +11,10 @@ drop function if exists public.admin_create_learner(text, text, text);
 drop function if exists public.learner_login(text, text);
 drop function if exists public.learner_progress_for(uuid);
 drop function if exists public.save_learner_progress(uuid, text, text, text, smallint);
+drop function if exists public.admin_update_learner(uuid, text, text, boolean, text);
+drop function if exists public.admin_delete_learner(uuid);
+drop function if exists public.issue_certificate(uuid);
+drop function if exists public.certificates_for(uuid);
 
 create extension if not exists pgcrypto with schema extensions;
 
@@ -34,12 +39,24 @@ create table public.learner_progress (
   unique (learner_id, module_key)
 );
 
+create table public.certificates (
+  id uuid primary key default gen_random_uuid(),
+  learner_id uuid not null unique references public.learners(id) on delete cascade,
+  course_title text not null,
+  certificate_code text not null unique,
+  issued_at timestamptz not null default now(),
+  issued_by uuid references auth.users(id)
+);
+
 alter table public.learners enable row level security;
 alter table public.learner_progress enable row level security;
+alter table public.certificates enable row level security;
 revoke all on public.learners from anon, authenticated;
 revoke all on public.learner_progress from anon, authenticated;
+revoke all on public.certificates from anon, authenticated;
 grant select on public.learners to authenticated;
 grant select on public.learner_progress to authenticated;
+grant select on public.certificates to authenticated;
 
 create policy "Admin reads learners"
 on public.learners for select to authenticated
@@ -47,6 +64,10 @@ using ((select auth.jwt()->>'email') = 'admin@dharma.com');
 
 create policy "Admin reads progress"
 on public.learner_progress for select to authenticated
+using ((select auth.jwt()->>'email') = 'admin@dharma.com');
+
+create policy "Admin reads certificates"
+on public.certificates for select to authenticated
 using ((select auth.jwt()->>'email') = 'admin@dharma.com');
 
 create or replace function public.admin_create_learner(
@@ -155,3 +176,6 @@ $$;
 
 revoke all on function public.save_learner_progress(uuid, text, text, text, smallint) from public;
 grant execute on function public.save_learner_progress(uuid, text, text, text, smallint) to anon, authenticated;
+
+-- User update/delete and certificate functions are maintained in admin_features.sql.
+-- Run admin_features.sql after this setup file to install those RPCs.

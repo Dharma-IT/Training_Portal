@@ -391,6 +391,8 @@ function Icon({ name, size = 19 }) {
   );
 }
 
+// Legacy single-module view retained for compatibility with saved deployments.
+// eslint-disable-next-line no-unused-vars
 function MyLearning({ learner, path, onContinue }) {
   const [progress, setProgress] = useState([]),
     [loading, setLoading] = useState(true);
@@ -651,6 +653,8 @@ function SopReader({ role }) {
   );
 }
 
+// Legacy single-module player retained for compatibility with saved deployments.
+// eslint-disable-next-line no-unused-vars
 function ModuleOne({ learner }) {
   const moduleOneLessons = lessonsFor(learner.role);
   const storageKey = `dharma_module_1_${learner.id}`;
@@ -852,7 +856,7 @@ function ModuleOne({ learner }) {
 function SalesLearning({ learner, path, onContinue }) {
   const [progress, setProgress] = useState([]);
   const [loading, setLoading] = useState(true);
-  const courseModules = courseModulesFor("sales");
+  const courseModules = courseModulesFor(learner.role);
   useEffect(() => {
     supabase
       .rpc("learner_progress_for", { p_learner_id: learner.id })
@@ -1012,7 +1016,7 @@ function SalesLearning({ learner, path, onContinue }) {
 }
 
 function SalesModules({ learner }) {
-  const courseModules = courseModulesFor("sales");
+  const courseModules = courseModulesFor(learner.role);
   const [completed, setCompleted] = useState(() =>
     Object.fromEntries(
       courseModules.map((module) => [
@@ -1082,7 +1086,8 @@ function SalesModules({ learner }) {
     const { error } = await supabase.rpc("save_learner_progress", {
       p_learner_id: learner.id,
       p_module_key: "sop",
-      p_module_title: "Sales Team SOP",
+      p_module_title:
+        learner.role === "sales" ? "Sales Team SOP" : "Customer Service SOP",
       p_lesson_title: "SOP reviewed",
       p_progress: 100,
     });
@@ -1225,18 +1230,22 @@ function SalesModules({ learner }) {
           aria-expanded={sopOpen}
           data-tooltip={
             !allModulesComplete
-              ? "Finish all four video modules to unlock SOP"
+              ? `Finish all ${courseModules.length} video modules to unlock SOP`
               : undefined
           }
         >
-          <span className="module-number">05</span>
+          <span className="module-number">
+            {String(courseModules.length + 1).padStart(2, "0")}
+          </span>
           <span>
             <small>STANDARD OPERATING PROCEDURE</small>
             <strong>SOP</strong>
             <em>
               {allModulesComplete
-                ? "Sales Team SOP"
-                : "Complete all four video modules to unlock this module."}
+                ? learner.role === "sales"
+                  ? "Sales Team SOP"
+                  : "Customer Service SOP"
+                : `Complete all ${courseModules.length} video modules to unlock this module.`}
             </em>
           </span>
           <span className="module-status">
@@ -1416,19 +1425,11 @@ function Dashboard({ navigate, learner }) {
           </div>
         </header>
         {active === "My learning" ? (
-          learner.role === "sales" ? (
-            <SalesLearning
-              learner={learner}
-              path={path}
-              onContinue={() => setActive("Overview")}
-            />
-          ) : (
-            <MyLearning
-              learner={learner}
-              path={path}
-              onContinue={() => setActive("Overview")}
-            />
-          )
+          <SalesLearning
+            learner={learner}
+            path={path}
+            onContinue={() => setActive("Overview")}
+          />
         ) : active === "Certificates" ? (
           <Certificates learner={learner} />
         ) : (
@@ -1512,11 +1513,7 @@ function Dashboard({ navigate, learner }) {
                 </button>
               </div>
             </section>
-            {learner.role === "sales" ? (
-              <SalesModules learner={learner} />
-            ) : (
-              <ModuleOne learner={learner} />
-            )}
+            <SalesModules learner={learner} />
           </div>
         )}
       </main>
@@ -1754,10 +1751,16 @@ function SignIn({ navigate, admin = false }) {
 }
 
 function UserManagement() {
-  const empty = { username: "", password: "", role: "customer_service" };
+  const empty = {
+    username: "",
+    password: "",
+    role: "customer_service",
+    active: true,
+  };
   const [form, setForm] = useState(empty),
     [users, setUsers] = useState([]),
     [open, setOpen] = useState(false),
+    [editingId, setEditingId] = useState(null),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState("");
   useEffect(() => {
@@ -1772,25 +1775,68 @@ function UserManagement() {
         else setUsers(data || []);
       });
   }, []);
-  async function createUser(e) {
+  async function saveUser(e) {
     e.preventDefault();
     setBusy(true);
     setMessage("");
-    const { data, error } = await supabase.rpc("admin_create_learner", {
-      p_username: form.username,
-      p_password: form.password,
-      p_role: form.role,
-    });
+    const { data, error } = editingId
+      ? await supabase.rpc("admin_update_learner", {
+          p_learner_id: editingId,
+          p_username: form.username,
+          p_role: form.role,
+          p_active: form.active,
+          p_password: form.password || null,
+        })
+      : await supabase.rpc("admin_create_learner", {
+          p_username: form.username,
+          p_password: form.password,
+          p_role: form.role,
+        });
     if (error) {
       setMessage(error.message);
       setBusy(false);
       return;
     }
     const learner = Array.isArray(data) ? data[0] : data;
-    setUsers((current) => [{ ...learner, learner_progress: [] }, ...current]);
+    setUsers((current) =>
+      editingId
+        ? current.map((user) =>
+            user.id === editingId ? { ...user, ...learner } : user,
+          )
+        : [
+            { ...learner, learner_progress: [], certificates: [] },
+            ...current,
+          ],
+    );
     setForm(empty);
+    setEditingId(null);
     setOpen(false);
     setBusy(false);
+  }
+  function editUser(user) {
+    setEditingId(user.id);
+    setForm({
+      username: user.username,
+      password: "",
+      role: user.role,
+      active: user.active !== false,
+    });
+    setMessage("");
+    setOpen(true);
+  }
+  async function deleteUser(user) {
+    if (
+      !window.confirm(
+        `Delete ${user.username}? Their progress and certificate will also be permanently deleted.`,
+      )
+    )
+      return;
+    setMessage("");
+    const { error } = await supabase.rpc("admin_delete_learner", {
+      p_learner_id: user.id,
+    });
+    if (error) setMessage(error.message);
+    else setUsers((current) => current.filter((item) => item.id !== user.id));
   }
   async function issueCertificate(id) {
     setMessage("");
@@ -1818,6 +1864,8 @@ function UserManagement() {
         </div>
         <button
           onClick={() => {
+            setEditingId(null);
+            setForm(empty);
             setOpen(true);
             setMessage("");
           }}
@@ -1838,15 +1886,27 @@ function UserManagement() {
           <span>Current module</span>
           <span>Last active</span>
           <span>Certificate</span>
+          <span>Actions</span>
         </div>
         {users.length ? (
           users.map((item) => {
             const modules = item.learner_progress || [];
-            const required = ["module-1", "sop"];
+            const required = [
+              ...courseModulesFor(item.role).map((module) => module.id),
+              "sop",
+            ];
             const completed = required.filter((key) =>
               modules.some((x) => x.module_key === key && x.completed),
             ).length;
-            const total = Math.round((completed / required.length) * 100);
+            const total = Math.round(
+              required.reduce(
+                (sum, key) =>
+                  sum +
+                  (modules.find((module) => module.module_key === key)
+                    ?.progress || 0),
+                0,
+              ) / required.length,
+            );
             const current = [...modules].sort(
               (a, b) => new Date(b.updated_at) - new Date(a.updated_at),
             )[0];
@@ -1867,7 +1927,7 @@ function UserManagement() {
                     <b style={{ width: `${total}%` }} />
                   </i>
                   <small>
-                    {total}% · {completed}/2 complete
+                    {total}% · {completed}/{required.length} complete
                   </small>
                 </span>
                 <span>
@@ -1889,12 +1949,20 @@ function UserManagement() {
                   ) : (
                     <button
                       className="issue-button"
-                      disabled={completed < 2}
+                      disabled={completed < required.length}
                       onClick={() => issueCertificate(item.id)}
                     >
-                      {completed === 2 ? "Issue" : "Not eligible"}
+                      {completed === required.length
+                        ? "Issue certificate"
+                        : "Not eligible"}
                     </button>
                   )}
+                </span>
+                <span className="user-actions">
+                  <button onClick={() => editUser(item)}>Edit</button>
+                  <button className="delete" onClick={() => deleteUser(item)}>
+                    Delete
+                  </button>
                 </span>
               </div>
             );
@@ -1910,17 +1978,25 @@ function UserManagement() {
           className="modal-backdrop"
           onMouseDown={(e) => e.target === e.currentTarget && setOpen(false)}
         >
-          <form className="create-user-modal" onSubmit={createUser}>
+          <form className="create-user-modal" onSubmit={saveUser}>
             <div>
-              <p className="eyebrow">NEW ACCOUNT</p>
-              <h2>Create portal user</h2>
-              <button type="button" onClick={() => setOpen(false)}>
+              <p className="eyebrow">
+                {editingId ? "MANAGE ACCOUNT" : "NEW ACCOUNT"}
+              </p>
+              <h2>{editingId ? "Update portal user" : "Create portal user"}</h2>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  setEditingId(null);
+                }}
+              >
                 ×
               </button>
             </div>
             <p>
-              The password is securely hashed before it is stored. Learners sign
-              in with the username and password created here.
+              Passwords are securely hashed before storage.
+              {editingId && " Leave the password blank to keep it unchanged."}
             </p>
             <label>
               Username
@@ -1941,7 +2017,7 @@ function UserManagement() {
                 placeholder="Minimum 8 characters"
                 minLength="8"
                 autoComplete="new-password"
-                required
+                required={!editingId}
               />
             </label>
             <label>
@@ -1954,13 +2030,35 @@ function UserManagement() {
                 <option value="sales">Sales</option>
               </select>
             </label>
+            {editingId && (
+              <label className="active-toggle">
+                <input
+                  type="checkbox"
+                  checked={form.active}
+                  onChange={(e) =>
+                    setForm({ ...form, active: e.target.checked })
+                  }
+                />
+                Active account
+              </label>
+            )}
             {message && <p className="signin-error">{message}</p>}
             <div className="modal-actions">
-              <button type="button" onClick={() => setOpen(false)}>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  setEditingId(null);
+                }}
+              >
                 Cancel
               </button>
               <button type="submit" disabled={busy}>
-                {busy ? "Creating…" : "Create user"}
+                {busy
+                  ? "Saving…"
+                  : editingId
+                    ? "Save changes"
+                    : "Create user"}
               </button>
             </div>
           </form>
