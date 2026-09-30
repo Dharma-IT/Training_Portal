@@ -391,6 +391,32 @@ function Icon({ name, size = 19 }) {
   );
 }
 
+function AdminGraphic({ type }) {
+  return (
+    <span className={`admin-graphic ${type}`} aria-hidden="true">
+      {type === "progress" ? (
+        <svg viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="18" className="graphic-ring" />
+          <path d="M13 31l8-8 6 5 9-12" className="graphic-line" />
+          <path d="M31 16h5v5" className="graphic-arrow" />
+          <circle cx="13" cy="31" r="2" className="graphic-dot dot-one" />
+          <circle cx="21" cy="23" r="2" className="graphic-dot dot-two" />
+          <circle cx="27" cy="28" r="2" className="graphic-dot dot-three" />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 48 48">
+          <circle cx="24" cy="18" r="6" className="graphic-person main" />
+          <circle cx="13" cy="22" r="4" className="graphic-person side" />
+          <circle cx="35" cy="22" r="4" className="graphic-person side" />
+          <path d="M14 36c1-7 5-10 10-10s9 3 10 10" className="graphic-body" />
+          <path d="M6 36c1-5 3-8 8-8M42 36c-1-5-3-8-8-8" className="graphic-body side" />
+          <path d="M18 39h12" className="graphic-spark" />
+        </svg>
+      )}
+    </span>
+  );
+}
+
 // Legacy single-module view retained for compatibility with saved deployments.
 // eslint-disable-next-line no-unused-vars
 function MyLearning({ learner, path, onContinue }) {
@@ -1927,10 +1953,13 @@ function UserManagement() {
   return (
     <section className="users-panel">
       <div className="users-heading">
-        <div>
-          <p className="eyebrow">ACCOUNT MANAGEMENT</p>
-          <h2>Portal users</h2>
-          <p>Create learner accounts and assign their training role.</p>
+        <div className="heading-with-graphic">
+          <AdminGraphic type="users" />
+          <div>
+            <p className="eyebrow">ACCOUNT MANAGEMENT</p>
+            <h2>Portal users</h2>
+            <p>Create learner accounts and assign their training role.</p>
+          </div>
         </div>
         <button
           onClick={() => {
@@ -2000,7 +2029,7 @@ function UserManagement() {
                     {total}% · {completed}/{required.length} complete
                   </small>
                 </span>
-                <span>
+                <span className="current-module-cell">
                   <strong>{current?.module_title || "Not started"}</strong>
                   <small>
                     {current
@@ -2166,9 +2195,12 @@ function AdminPortal({ navigate, user }) {
       </aside>
       <main className="admin-main">
         <header>
-          <div>
-            <p className="eyebrow">ADMIN PORTAL</p>
-            <h1>Learner progress</h1>
+          <div className="heading-with-graphic admin-title-group">
+            <AdminGraphic type="progress" />
+            <div>
+              <p className="eyebrow">ADMIN PORTAL</p>
+              <h1>Learner progress</h1>
+            </div>
           </div>
           <div className="admin-header-actions">
             <a
