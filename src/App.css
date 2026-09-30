@@ -1133,6 +1133,69 @@ main {
   color: var(--muted);
   margin: 9px 0 0;
 }
+.learner-heading-group {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+}
+.learner-heading-group.compact {
+  gap: 12px;
+}
+.learner-heading-group > div > p:last-child {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 9px 0 0;
+}
+.learner-graphic {
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  color: #2e7458;
+  background: linear-gradient(145deg, #eef7f0, #dceadf);
+  border: 1px solid rgba(40, 112, 83, 0.14);
+  box-shadow: 0 9px 24px rgba(21, 77, 56, 0.08);
+  animation: learner-icon-float 3.4s ease-in-out infinite;
+}
+.learner-heading-group.compact .learner-graphic {
+  width: 43px;
+  height: 43px;
+  border-radius: 13px;
+}
+.learner-graphic.paths { animation-delay: -1.1s; }
+.learner-graphic.modules {
+  color: #a16e13;
+  background: linear-gradient(145deg, #fffaf0, #f2e6c9);
+  border-color: rgba(174, 119, 17, 0.16);
+  animation-delay: -2.1s;
+}
+.learner-graphic svg {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  overflow: visible;
+}
+.learner-graphic.welcome svg {
+  fill: rgba(211, 157, 85, 0.18);
+  stroke: #bd8233;
+  animation: learner-spark 2.8s ease-in-out infinite;
+}
+.learner-graphic.paths svg {
+  stroke-dasharray: 70;
+  animation: learner-path-draw 3.2s ease-in-out infinite;
+}
+.learner-graphic.modules rect {
+  transform-origin: center;
+  animation: learner-module-pulse 2.7s ease-in-out infinite;
+}
+.learner-graphic.modules rect:nth-child(2) { animation-delay: 0.18s; }
+.learner-graphic.modules rect:nth-child(3) { animation-delay: 0.36s; }
 .outline-button {
   display: flex;
   align-items: center;
@@ -1944,8 +2007,41 @@ main {
   margin-top: 34px;
 }
 .simple-hero .hero-copy {
+  width: min(65%, 760px);
+  position: relative;
+  z-index: 2;
+}
+.learner-hero-art {
+  position: absolute;
+  right: 7%;
+  top: 50%;
+  width: min(22vw, 235px);
+  transform: translateY(-50%);
+  color: rgba(224, 185, 101, 0.88);
+  z-index: 1;
+}
+.learner-hero-art svg {
   width: 100%;
-  max-width: 760px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.learner-hero-art circle {
+  transform-origin: center;
+  animation: learner-target-breathe 3.8s ease-in-out infinite;
+}
+.learner-hero-art circle:nth-child(2) { animation-delay: -0.35s; }
+.learner-hero-art circle:nth-child(3) {
+  fill: rgba(224, 185, 101, 0.16);
+  animation-delay: -0.7s;
+}
+.learner-hero-art .target-arrow {
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 120;
+  animation: learner-arrow-hit 3s ease-in-out infinite;
 }
 .recommend-card {
   grid-template-columns: 1fr;
@@ -3265,6 +3361,45 @@ main {
 @keyframes admin-dot-pop {
   0%, 100% { transform: scale(0.75); opacity: 0.55; }
   50% { transform: scale(1.25); opacity: 1; }
+}
+@keyframes learner-icon-float {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-5px) rotate(1deg); }
+}
+@keyframes learner-spark {
+  0%, 100% { transform: scale(0.88) rotate(-4deg); opacity: 0.7; }
+  50% { transform: scale(1.08) rotate(4deg); opacity: 1; }
+}
+@keyframes learner-path-draw {
+  0%, 15% { stroke-dashoffset: 70; opacity: 0.4; }
+  55%, 82% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: -70; opacity: 0.45; }
+}
+@keyframes learner-module-pulse {
+  0%, 100% { transform: scaleX(0.92); opacity: 0.65; }
+  50% { transform: scaleX(1); opacity: 1; }
+}
+@keyframes learner-target-breathe {
+  0%, 100% { transform: scale(0.92); opacity: 0.32; }
+  50% { transform: scale(1.04); opacity: 0.8; }
+}
+@keyframes learner-arrow-hit {
+  0% { stroke-dashoffset: 120; transform: translate(-9px, 9px); opacity: 0; }
+  38%, 76% { stroke-dashoffset: 0; transform: translate(0); opacity: 1; }
+  100% { stroke-dashoffset: -120; transform: translate(5px, -5px); opacity: 0; }
+}
+@media (max-width: 800px) {
+  .learner-hero-art {
+    opacity: 0.28;
+    right: 1%;
+    width: 190px;
+  }
+  .simple-hero .hero-copy {
+    width: 100%;
+  }
+  .learner-heading-group {
+    align-items: flex-start;
+  }
 }
 @keyframes help-pulse {
   0%,

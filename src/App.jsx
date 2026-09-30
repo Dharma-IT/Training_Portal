@@ -417,6 +417,15 @@ function AdminGraphic({ type }) {
   );
 }
 
+function LearnerGraphic({ type }) {
+  const art = {
+    welcome: <><path d="M24 7l2.4 7.6L34 17l-7.6 2.4L24 27l-2.4-7.6L14 17l7.6-2.4L24 7Z" /><path d="M12 27l1.3 4.2 4.2 1.3-4.2 1.3L12 38l-1.3-4.2-4.2-1.3 4.2-1.3L12 27ZM36 27l1 3 3 1-3 1-1 3-1-3-3-1 3-1 1-3Z" /></>,
+    paths: <><circle cx="10" cy="24" r="4" /><circle cx="37" cy="12" r="4" /><circle cx="37" cy="36" r="4" /><path d="M14 24h7c7 0 6-12 12-12M14 24h7c7 0 6 12 12 12" /><path d="m29 9 4 3-4 3M29 33l4 3-4 3" /></>,
+    modules: <><rect x="8" y="9" width="32" height="8" rx="4" /><rect x="8" y="21" width="32" height="8" rx="4" /><rect x="8" y="33" width="32" height="8" rx="4" /><path d="m13 12 3 2-3 2M13 24l3 2-3 2M13 36l3 2-3 2" /></>,
+  };
+  return <span className={`learner-graphic ${type}`} aria-hidden="true"><svg viewBox="0 0 48 48">{art[type]}</svg></span>;
+}
+
 // Legacy single-module view retained for compatibility with saved deployments.
 // eslint-disable-next-line no-unused-vars
 function MyLearning({ learner, path, onContinue }) {
@@ -1191,9 +1200,12 @@ function SalesModules({ learner }) {
   return (
     <section className="section-block training-accordions">
       <div className="section-heading">
-        <div>
-          <p className="eyebrow">YOUR TRAINING</p>
-          <h2>Course modules</h2>
+        <div className="learner-heading-group compact">
+          <LearnerGraphic type="modules" />
+          <div>
+            <p className="eyebrow">YOUR TRAINING</p>
+            <h2>Course modules</h2>
+          </div>
         </div>
       </div>
       {syncError && (
@@ -1531,23 +1543,29 @@ function Dashboard({ navigate, learner }) {
         ) : (
           <div className="content">
             <section className="welcome-row">
-              <div>
-                <p className="eyebrow">YOUR TRAINING HOME</p>
-                <h1>
-                  Welcome back, {displayName} <span>✦</span>
-                </h1>
-                <p>Your {path.name} learning path is ready.</p>
+              <div className="learner-heading-group">
+                <LearnerGraphic type="welcome" />
+                <div>
+                  <p className="eyebrow">YOUR TRAINING HOME</p>
+                  <h1>
+                    Welcome back, {displayName} <span>✦</span>
+                  </h1>
+                  <p>Your {path.name} learning path is ready.</p>
+                </div>
               </div>
             </section>
             <section className="role-paths">
               <div className="section-heading">
-                <div>
-                  <p className="eyebrow">CHOOSE YOUR ASSIGNED ROLE</p>
-                  <h2>Training paths</h2>
-                  <p className="role-guidance">
-                    Select your role to continue. Access is based on the role
-                    assigned by your administrator.
-                  </p>
+                <div className="learner-heading-group compact">
+                  <LearnerGraphic type="paths" />
+                  <div>
+                    <p className="eyebrow">CHOOSE YOUR ASSIGNED ROLE</p>
+                    <h2>Training paths</h2>
+                    <p className="role-guidance">
+                      Select your role to continue. Access is based on the role
+                      assigned by your administrator.
+                    </p>
+                  </div>
                 </div>
               </div>
               <div className="role-path-grid">
@@ -1607,6 +1625,15 @@ function Dashboard({ navigate, learner }) {
                 <button>
                   Continue training <Icon name="arrow" size={17} />
                 </button>
+              </div>
+              <div className="learner-hero-art" aria-hidden="true">
+                <svg viewBox="0 0 220 220">
+                  <circle cx="110" cy="110" r="76" />
+                  <circle cx="110" cy="110" r="49" />
+                  <circle cx="110" cy="110" r="20" />
+                  <path d="M42 174 116 100" className="target-arrow" />
+                  <path d="m103 99 15-1-1 15M39 158l3 16 16 3" className="target-arrow" />
+                </svg>
               </div>
             </section>
             <SalesModules learner={learner} />
