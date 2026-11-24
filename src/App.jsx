@@ -110,49 +110,49 @@ const lessonsByRole = {
       title: "Welcome to Dharma",
       description:
         "Get introduced to Dharma Nutrition, the team, and the training journey.",
-      video: driveVideo("1QA00k44gZNeGzOpVqXHJF168vjBvrBSv"),
+      video: driveVideo("1ZAhxRjUJBaCGvgyHHWduxbbr_dqo_doh"),
     },
     {
       title: "Patient Journey",
       description:
         "Follow the patient experience through every important stage of care.",
-      video: driveVideo("1O7QyuXGynZ5KWXZC0H0_JrZ9_GPDs3Yt"),
+      video: driveVideo("1D8BNyWHP-4FOhQQj85VHRF-Vm4xU1SyY"),
     },
     {
       title: "Teams and Responsibilities",
       description:
         "Learn how each team contributes and who owns each part of the patient experience.",
-      video: driveVideo("1-OLqOM9c4Yl2bqrzkWB1eDGXvMuKsvv_"),
+      video: driveVideo("1Xbr9woZfkYsG8-ND8YE0Kr6H1HfBu73L"),
     },
     {
       title: "Products and Services",
       description:
         "Review the products and services offered by Dharma Nutrition.",
-      video: driveVideo("1G-xhzuO7uKDts3IdfEUoaSJ5VqfBycjM"),
+      video: driveVideo("16r8YRzmD9OXeBBDVovsHfYkd1-Br6D9j"),
     },
     {
       title: "Communication Standards",
       description:
         "Learn Dharma standards for professional messaging and calls.",
-      video: driveVideo("1nivSMhKlIhYnOMtPds6kLZb3Qh0aZz0b"),
+      video: driveVideo("1SL9zzPvXn4dxcCiKzXHP4yVOBSqFs4-2"),
     },
     {
       title: "Dharma Tools",
       description:
         "Get introduced to HubSpot, Aircall, Hubstaff, Respond.io, and the tools used in daily work.",
-      video: driveVideo("1SVvJ8T9mIY0g4aL9tEwUpAfIiCbQyg0U"),
+      video: driveVideo("1pAlSSsyZ0pYBBV5fu_jkAEBMejP1Iz9l"),
     },
     {
       title: "CRM",
       description:
         "Learn the core CRM and HubSpot workflow used by the team.",
-      video: driveVideo("1WzLBvZng0WnU7Om3ukzGrIqhumauIAyX"),
+      video: driveVideo("1N6abnMXPMKE56l3qqNahC_ThrPJHx9ZZ"),
     },
     {
       title: "How to Respond",
       description:
         "Learn how to respond to customer conversations clearly and professionally.",
-      video: driveVideo("1l-6vxz0-4ey7srn8Ndkqu3MUE_6875uM"),
+      video: driveVideo("1lc6vngr5k07eW896Pm5jwzv9SkvJo2px"),
     },
   ],
   sales: [
