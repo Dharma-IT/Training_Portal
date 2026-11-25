@@ -2068,6 +2068,68 @@ main {
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
+.bigin-guide {
+  padding: 24px;
+  color: var(--ink);
+  line-height: 1.7;
+}
+.course-progress-stack,
+.course-current {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.course-progress-stack,
+.current-module-cell:has(.course-current) {
+  gap: 18px;
+}
+.course-progress-stack .learner-total {
+  width: 100%;
+}
+.bigin-guide h3 {
+  margin: 0 0 12px;
+}
+.bigin-guide a {
+  color: #206b4f;
+  font-weight: 600;
+  text-underline-offset: 4px;
+}
+.bigin-guide ol {
+  padding-left: 24px;
+  margin: 20px 0;
+}
+.bigin-guide li {
+  padding-left: 6px;
+  margin-bottom: 12px;
+}
+.bigin-guide li::marker {
+  color: #206b4f;
+  font-weight: 700;
+}
+.bigin-video-label {
+  margin: 20px 0 0;
+  font-weight: 600;
+}
+.bigin-calendar-guide {
+  background: #fff;
+  border: 1px solid #d9e2db;
+  border-radius: 13px;
+  margin-top: 20px;
+}
+.bigin-update-note {
+  background: #edf5ef;
+  border-left: 3px solid #4d8a70;
+  border-radius: 6px;
+  padding: 18px 20px;
+  margin-top: 24px;
+}
+.bigin-update-note h4 {
+  margin: 0 0 8px;
+}
+.bigin-update-note p {
+  margin: 0;
+}
 .role-path-card {
   min-height: 104px;
   border: 1px solid #d9e2db;

@@ -96,6 +96,16 @@ const paths = {
   },
 };
 
+const trainingPaths = {
+  ...paths,
+  bigin: {
+    name: "BIGIN",
+    code: "BIGIN",
+    icon: "book",
+    shared: true,
+  },
+};
+
 const navItems = [
   ["grid", "Overview"],
   ["book", "My learning"],
@@ -237,6 +247,67 @@ const lessonsByRole = {
     },
   ],
 };
+
+const biginCourses = [
+  {
+    id: "bigin-booking",
+    category: "BIGIN",
+    title: "How to Book",
+    lessons: [{
+      title: "How to Book",
+      description: "Learn the booking workflow in BIGIN to schedule appointments for clients.",
+      video: driveVideo("1DhT-hJozmnQHIF6JKSa7f2YOXSO_JIiq"),
+      guideUrl: "https://dharma-forms.vercel.app/",
+      guideLabel: "Open booking form",
+      steps: [
+        "Enter all the client's details in the form.",
+        "Click Confirm Booking to proceed.",
+        "Select the appointment date and time. Set the timezone to EST.",
+        "Copy the client's name and email from the details above, then paste them into the booking fields.",
+        "Review all the details and click Complete Booking.",
+      ],
+    }],
+  },
+  {
+    id: "bigin-deal-ownership",
+    category: "BIGIN",
+    title: "How to Change Deal Ownership",
+    lessons: [{
+      title: "How to Change Deal Ownership",
+      description: "Learn how to reassign a deal in BIGIN so the right team member owns the follow-up.",
+      video: driveVideo("1Jr3-WcNhYmsiCjjfMORmxdn9gp-90PMX"),
+      guideUrl: "https://dharma-forms.vercel.app/stage",
+      guideLabel: "Open deal management",
+      steps: [
+        "Search for the client.",
+        "Select the client and select their deal.",
+        "Click Change Ownership.",
+        "Select the team member from the dropdown.",
+        "Click Confirm Handoff.",
+      ],
+    }],
+  },
+  {
+    id: "bigin-deal-stage-products",
+    category: "BIGIN",
+    title: "Change Deal Stage & Add Product Info",
+    lessons: [{
+      title: "Change Deal Stage & Add Product Info",
+      description: "Learn how to update a deal's stage and add product information in BIGIN to keep records current.",
+      video: driveVideo("1QsdlqxSpIbvMQJbolP-efcTstMzEQ5VX"),
+      guideUrl: "https://dharma-forms.vercel.app/stage",
+      guideLabel: "Open deal management",
+      steps: [
+        "Search for the client and select their profile.",
+        "Select the client's deal.",
+        "Change the deal's stage to Paid.",
+        "Select the product purchased by the client.",
+        "Review the selected product, then click Confirm Product.",
+        "Confirm that the deal has been marked as Paid.",
+      ],
+    }],
+  },
+];
 
 const courseModulesFor = (role) =>
   role === "sales"
@@ -1050,10 +1121,11 @@ function SalesLearning({ learner, path, onContinue }) {
   );
 }
 
-function SalesModules({ learner }) {
+function SalesModules({ learner, trainingPath }) {
+  const isBigin = trainingPath === "bigin";
   const courseModules = useMemo(
-    () => courseModulesFor(learner.role),
-    [learner.role],
+    () => isBigin ? biginCourses : courseModulesFor(learner.role),
+    [learner.role, isBigin],
   );
   const [syncError, setSyncError] = useState("");
   const [completed, setCompleted] = useState(() =>
@@ -1082,7 +1154,7 @@ function SalesModules({ learner }) {
       ]),
     ),
   );
-  const [openModule, setOpenModule] = useState("module-1");
+  const [openModule, setOpenModule] = useState(courseModules[0].id);
   const [sopOpen, setSopOpen] = useState(false);
   const sopStorageKey = `dharma_module_1_${learner.id}_sop`;
   const [sopCompleted, setSopCompleted] = useState(
@@ -1120,7 +1192,7 @@ function SalesModules({ learner }) {
           return;
         }
       }
-      if (localStorage.getItem(sopStorageKey) === "complete") {
+      if (!isBigin && localStorage.getItem(sopStorageKey) === "complete") {
         const { error } = await supabase.rpc("save_learner_progress", {
           p_learner_id: learner.id,
           p_module_key: "sop",
@@ -1141,7 +1213,7 @@ function SalesModules({ learner }) {
       setSyncError("");
     }
     backfillLocalProgress();
-  }, [courseModules, learner.id, learner.role, sopStorageKey]);
+  }, [courseModules, learner.id, learner.role, sopStorageKey, isBigin]);
 
   async function finishLesson(module, index) {
     const finished = Math.max(completed[module.id], index + 1);
@@ -1204,7 +1276,7 @@ function SalesModules({ learner }) {
           <LearnerGraphic type="modules" />
           <div>
             <p className="eyebrow">YOUR TRAINING</p>
-            <h2>Course modules</h2>
+            <h2>{isBigin ? "BIGIN courses" : "Course modules"}</h2>
           </div>
         </div>
       </div>
@@ -1216,7 +1288,7 @@ function SalesModules({ learner }) {
       {courseModules.map((module, moduleIndex) => {
         const previous = courseModules[moduleIndex - 1];
         const moduleLocked =
-          moduleIndex > 0 && completed[previous.id] < previous.lessons.length;
+          !isBigin && moduleIndex > 0 && completed[previous.id] < previous.lessons.length;
         const isOpen = openModule === module.id && !moduleLocked;
         const selectedIndex = selected[module.id];
         const lesson = module.lessons[selectedIndex];
@@ -1245,7 +1317,7 @@ function SalesModules({ learner }) {
                 <em>
                   {moduleLocked
                     ? "Complete the previous module first."
-                    : "Complete each video in order."}
+                    : isBigin ? module.lessons[0].description : "Complete each video in order."}
                 </em>
               </span>
               <span className="lesson-count">
@@ -1256,6 +1328,19 @@ function SalesModules({ learner }) {
             {isOpen && (
               <div className="accordion-body lesson-layout">
                 <div className="video-panel">
+                  {lesson.steps && (
+                    <div className="bigin-guide">
+                      <p className="eyebrow">STEP-BY-STEP GUIDE</p>
+                      <h3>{lesson.title}</h3>
+                      <a href={lesson.guideUrl} target="_blank" rel="noreferrer">
+                        {lesson.guideLabel} <span aria-hidden="true">↗</span>
+                      </a>
+                      <ol>
+                        {lesson.steps.map((step) => <li key={step}>{step}</li>)}
+                      </ol>
+                      <p className="bigin-video-label">Watch the walkthrough below</p>
+                    </div>
+                  )}
                   <div className="video-frame">
                     <iframe
                       key={lesson.video}
@@ -1328,7 +1413,28 @@ function SalesModules({ learner }) {
           </article>
         );
       })}
-      <article
+      {isBigin && (
+        <section className="bigin-guide bigin-calendar-guide">
+          <p className="eyebrow">CALENDAR GUIDE</p>
+          <h3>Cancel or reschedule a meeting</h3>
+          <a href="https://dharma-forms.vercel.app/calendar" target="_blank" rel="noreferrer">
+            Open team calendar <span aria-hidden="true">↗</span>
+          </a>
+          <ol>
+            <li>Use Today, Previous, Next, or the date picker to find the appointment date. Use the Team dropdown to filter the calendar if needed.</li>
+            <li>Find the meeting under the appropriate team member and click it to open its details.</li>
+            <li>Review the meeting title, participants, and appointment time. The calendar displays Eastern Time (America/New_York).</li>
+            <li>To reschedule, click Reschedule meeting and follow the prompts to choose a new date and time, then review and confirm the change.</li>
+            <li>To cancel, click Cancel meeting and follow the prompts to confirm the cancellation.</li>
+            <li>Refresh the calendar and verify that the meeting appears at its new time or has been removed after cancellation.</li>
+          </ol>
+          <aside className="bigin-update-note" role="note">
+            <h4>Feature update notice</h4>
+            <p>New functionality has been added since these videos were recorded. Use the navigation bar on the Dharma Forms dashboard to switch between booking, deal management, and the calendar. The calendar lets you reschedule or cancel meetings. Some screens and navigation may look different from the videos; use the written steps above for guidance.</p>
+          </aside>
+        </section>
+      )}
+      {!isBigin && <article
         className={`training-accordion sop-accordion ${allModulesComplete ? "" : "locked-module"}`}
       >
         <button
@@ -1377,7 +1483,7 @@ function SalesModules({ learner }) {
             </button>
           </div>
         )}
-      </article>
+      </article>}
     </section>
   );
 }
@@ -1436,10 +1542,12 @@ function Certificates({ learner }) {
 
 function Dashboard({ navigate, learner }) {
   const [active, setActive] = useState("Overview");
+  const [selectedPath, setSelectedPath] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false),
     [notice, setNotice] = useState(false);
   const team = learner?.role === "sales" ? "sales" : "service";
   const path = paths[team];
+  const currentPath = trainingPaths[selectedPath] || path;
   const displayName = learner?.username || "Learner";
   const initials = displayName.slice(0, 2).toUpperCase();
   return (
@@ -1533,7 +1641,13 @@ function Dashboard({ navigate, learner }) {
           </div>
         </header>
         {active === "My learning" ? (
-          <SalesLearning
+          selectedPath === "bigin" ? (
+            <div className="content">
+              <h1>BIGIN</h1>
+              <p>Shared training for Sales and Customer Service.</p>
+              <SalesModules key={`bigin-${learner.id}`} learner={learner} trainingPath="bigin" />
+            </div>
+          ) : <SalesLearning
             learner={learner}
             path={path}
             onContinue={() => setActive("Overview")}
@@ -1562,15 +1676,15 @@ function Dashboard({ navigate, learner }) {
                     <p className="eyebrow">CHOOSE YOUR ASSIGNED ROLE</p>
                     <h2>Training paths</h2>
                     <p className="role-guidance">
-                      Select your role to continue. Access is based on the role
-                      assigned by your administrator.
+                      Select a training path to continue. BIGIN is open to both
+                      Sales and Customer Service.
                     </p>
                   </div>
                 </div>
               </div>
               <div className="role-path-grid">
-                {Object.entries(paths).map(([key, item]) => {
-                  const allowed = key === team;
+                {Object.entries(trainingPaths).map(([key, item]) => {
+                  const allowed = key === team || (item.shared && ["sales", "customer_service"].includes(learner?.role));
                   return (
                     <button
                       key={key}
@@ -1582,12 +1696,13 @@ function Dashboard({ navigate, learner }) {
                           ? `Only the ${item.name} team can enter here`
                           : undefined
                       }
-                      onClick={() =>
-                        allowed &&
+                      onClick={() => {
+                        if (!allowed) return;
+                        setSelectedPath(key);
                         document
                           .getElementById("current-path")
-                          ?.scrollIntoView({ behavior: "smooth" })
-                      }
+                          ?.scrollIntoView({ behavior: "smooth" });
+                      }}
                     >
                       <span className="role-path-icon">
                         <Icon name={item.icon} size={24} />
@@ -1596,7 +1711,9 @@ function Dashboard({ navigate, learner }) {
                         <small>{item.code} LEARNING PATH</small>
                         <strong>{item.name}</strong>
                         <span>
-                          {allowed
+                          {item.shared
+                            ? "Shared path for Sales and Customer Service"
+                            : allowed
                             ? "Your assigned path — click to continue"
                             : `Only ${item.name} learners can access this path`}
                         </span>
@@ -1612,17 +1729,18 @@ function Dashboard({ navigate, learner }) {
             </section>
             <section className="hero-card simple-hero" id="current-path">
               <div className="hero-copy">
-                <span className="pill">{path.name.toUpperCase()} PATH</span>
+                <span className="pill">{currentPath.name.toUpperCase()} PATH</span>
                 <h2>
-                  Your next step:
+                  {selectedPath === "bigin" ? "Welcome to" : "Your next step:"}
                   <br />
-                  {path.next}
+                  {selectedPath === "bigin" ? "BIGIN" : path.next}
                 </h2>
                 <p>
-                  {path.description} Your next lesson takes about{" "}
-                  {path.duration}.
+                  {selectedPath === "bigin"
+                    ? "Learn booking, deal ownership, and deal updates in three short courses shared by Sales and Customer Service."
+                    : `${path.description} Your next lesson takes about ${path.duration}.`}
                 </p>
-                <button>
+                <button onClick={() => setActive("My learning")}>
                   Continue training <Icon name="arrow" size={17} />
                 </button>
               </div>
@@ -1636,7 +1754,9 @@ function Dashboard({ navigate, learner }) {
                 </svg>
               </div>
             </section>
-            <SalesModules learner={learner} />
+            {selectedPath === "bigin" ? (
+              <SalesModules key={`bigin-${learner.id}`} learner={learner} trainingPath="bigin" />
+            ) : <SalesModules learner={learner} />}
           </div>
         )}
       </main>
@@ -2036,6 +2156,27 @@ function UserManagement() {
             const current = [...modules].sort(
               (a, b) => new Date(b.updated_at) - new Date(a.updated_at),
             )[0];
+            const courseProgress = [
+              {
+                name: item.role === "sales" ? "Sales" : "Customer Service",
+                keys: required,
+                total,
+                completed,
+              },
+              {
+                name: "BIGIN",
+                keys: biginCourses.map((course) => course.id),
+              },
+            ].map((course) => {
+              const records = modules.filter((record) => course.keys.includes(record.module_key));
+              return {
+                ...course,
+                total: course.total ?? Math.round(course.keys.reduce((sum, key) =>
+                  sum + (records.find((record) => record.module_key === key)?.progress || 0), 0) / course.keys.length),
+                completed: course.completed ?? records.filter((record) => record.progress === 100).length,
+                current: [...records].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))[0],
+              };
+            });
             const certificate = item.certificates?.[0];
             return (
               <div className="users-row" key={item.id}>
@@ -2048,21 +2189,25 @@ function UserManagement() {
                     {item.role.replace("_", " ")}
                   </i>
                 </span>
-                <span className="learner-total">
-                  <i>
-                    <b style={{ width: `${total}%` }} />
-                  </i>
-                  <small>
-                    {total}% · {completed}/{required.length} complete
-                  </small>
+                <span className="course-progress-stack">
+                  {courseProgress.map((course) => (
+                    <span className="learner-total" key={course.name}>
+                      <strong>{course.name}</strong>
+                      <i role="progressbar" aria-label={`${course.name} course progress for ${item.username}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={course.total}>
+                        <b style={{ width: `${course.total}%` }} />
+                      </i>
+                      <small>{course.total}% · {course.completed}/{course.keys.length} complete</small>
+                    </span>
+                  ))}
                 </span>
                 <span className="current-module-cell">
-                  <strong>{current?.module_title || "Not started"}</strong>
-                  <small>
-                    {current
-                      ? `${current.progress}% complete`
-                      : "No activity yet"}
-                  </small>
+                  {courseProgress.map((course) => (
+                    <span className="course-current" key={course.name}>
+                      <small>{course.name}</small>
+                      <strong>{course.current?.module_title || "Not started"}</strong>
+                      <small>{course.current ? `${course.current.progress}% complete` : "No activity yet"}</small>
+                    </span>
+                  ))}
                 </span>
                 <span>
                   {current?.updated_at
